@@ -179,3 +179,28 @@ h2 {
 .order-item.discount {
   color: green;
 }
+
+.order-details {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.order-details h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.order-details p {
+  margin: 10px 0;
+}
+
+.order-details img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin: 10px 0;
+}

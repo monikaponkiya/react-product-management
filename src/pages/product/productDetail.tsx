@@ -1,276 +1,308 @@
-import { CheckCircleOutlined } from "@ant-design/icons";
-import { Button, Descriptions, Form, Image, Input, Modal, Rate, Space, Tabs, Tag, message } from "antd";
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { IColorAndSizeArray, ICoupon, ICouponApplied, ICouponReq, IOrderReq, IUser } from "../../service/api/product/type";
-import { useCouponApplied, useCouponList, useOrderConfirmed, useProductDetails } from "../../service/hook/product";
-import { IMAGE_BASE_URL } from "../../utils/constant";
-import { ROUTES } from "../../utils/routes";
+import { CheckCircleOutlined } from '@ant-design/icons';
+import {
+  Button,
+  Descriptions,
+  Form,
+  Image,
+  Input,
+  Modal,
+  Rate,
+  Space,
+  Tabs,
+  Tag,
+  message
+} from 'antd';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+import {
+  IColorAndSizeArray,
+  ICoupon,
+  ICouponApplied,
+  ICouponReq,
+  IOrderReq,
+  IUser
+} from '../../service/api/product/type';
+import {
+  useCouponApplied,
+  useCouponList,
+  useOrderConfirmed,
+  useProductDetails
+} from '../../service/hook/product';
+import { IMAGE_BASE_URL } from '../../utils/constant';
+import { ROUTES } from '../../utils/routes';
 
 const ProductDetail = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [selectedSize, setSelectedSize] = useState('');
-    const [selectedColor, setSelectedColor] = useState('');
-    const [availableColors, setAvailableColors] = useState<IColorAndSizeArray[]>([]);
-    const [price, setPrice] = useState(0);
-    const [inputCode, setInputCode] = useState('');
-    const [selectedCoupon, setSelectedCoupon] = useState<ICoupon>();
-    const [visible, setVisible] = useState(false);
-    const [userEmail, setUserEmail] = useState('');
-    const [orderDetails, setOrderDetails] = useState<ICouponApplied>();
-    
-    const { data } = useProductDetails(id ?? '');
-    const { data: coupons } = useCouponList(id ?? '');
-    const { mutate: couponAppliedMutate } = useCouponApplied();
-    const { mutate: orderConfirmedMutate } = useOrderConfirmed();
-    
-    useEffect(() => {
-        if (data) {
-            const defaultSize = data.productSize[0]._id;
-            setSelectedSize(defaultSize);
-        }
-    }, [data]);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
+  const [availableColors, setAvailableColors] = useState<IColorAndSizeArray[]>([]);
+  const [price, setPrice] = useState(0);
+  const [productEntryId, setProductEntryId] = useState('');
+  const [inputCode, setInputCode] = useState('');
+  const [selectedCoupon, setSelectedCoupon] = useState<ICoupon>();
+  const [visible, setVisible] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [orderDetails, setOrderDetails] = useState<ICouponApplied>();
 
-    useEffect(() => {
-        if (data && selectedSize) {
-            const sizeData = data.sizeWiseColorPriceArray.find(item => item._id === selectedSize);
-            if (sizeData) {
-                setAvailableColors(sizeData.colorAndSizeArray);
-                const defaultColor = sizeData.colorAndSizeArray[0].colorId;
-                setSelectedColor(defaultColor);
-                setPrice(sizeData.colorAndSizeArray[0].price);
-            }
-        }
-    }, [data, selectedSize]);
+  const { data } = useProductDetails(id ?? '');
+  const { data: coupons } = useCouponList(id ?? '');
+  const { mutate: couponAppliedMutate } = useCouponApplied();
+  const { mutate: orderConfirmedMutate } = useOrderConfirmed();
 
-    useEffect(() => {
-        if (data && selectedSize && selectedColor) {
-            const sizeData = data.sizeWiseColorPriceArray.find(item => item._id === selectedSize);
-            if (sizeData) {
-                const colorData = sizeData.colorAndSizeArray.find(item => item.colorId === selectedColor);
-                if (colorData) {
-                    setPrice(colorData.price);
-                }
-            }
-        }
-    }, [data, selectedSize, selectedColor]);
-
-    const sizeItems = data?.productSize.map(size => ({
-        key: size._id,
-        label: size.name,
-        children: null,
-    }));
-
-    const handleApplyCoupon = () => {
-        if (!inputCode) {
-            message.error('Please enter coupon code');
-            return;
-        }    
-        if (!userEmail) {
-            setVisible(true);
-            return;
-        }    
-        const coupon = coupons?.find(c => c.code === inputCode);
-        if (!coupon) {
-            message.error('Invalid coupon code!');
-            return;
-        }    
-        const couponDetails: ICouponReq = {
-            productEntryId: data?.productEntryId,
-            couponId: coupon._id,
-            email: userEmail,
-        };    
-        couponAppliedMutate(couponDetails, {
-            onSuccess: (res) => {
-                setOrderDetails(res);
-                console.log('orderDetails: ', orderDetails);
-            },
-            onError: () => {
-                message.error('Failed to apply coupon');
-            }
-        });
-    };
-
-    const handleConfirmOrder = () => {
-        if (!userEmail) {
-            setVisible(true);
-            return;
-        }
-        const orderData: IOrderReq = {
-            productEntryId: data?.productEntryId ?? '',
-            couponId: selectedCoupon?._id ?? '',
-            email: userEmail,
-            orderValue: orderDetails?.amount_payable ?? price, 
-        }; 
-        orderConfirmedMutate(orderData, {
-            onSuccess: (res) => {
-                navigate(`/orderDetail/${res._id}`)
-            }, 
-            onError: () => {}
-        })
+  useEffect(() => {
+    if (data) {
+      const defaultSize = data.productSize[0]._id;
+      setSelectedSize(defaultSize);
     }
+  }, [data]);
 
-    const handleCancel = () => {
-        setVisible(false);
-    };
-
-    const onFinish = (values: IUser) => {
-        setVisible(false);
-        setUserEmail(values.email)
+  useEffect(() => {
+    if (data && selectedSize) {
+      const sizeData = data.sizeWiseColorPriceArray.find((item) => item._id === selectedSize);
+      if (sizeData) {
+        setAvailableColors(sizeData.colorAndSizeArray);
+        const defaultColor = sizeData.colorAndSizeArray[0].colorId;
+        setSelectedColor(defaultColor);
+        setPrice(sizeData.colorAndSizeArray[0].price);
+      }
     }
+  }, [data, selectedSize]);
 
-    const toInputUppercase = (e: any) => {
-        e.target.value = ("" + e.target.value).toUpperCase();
+  useEffect(() => {
+    if (data && selectedSize && selectedColor) {
+      const sizeData = data.sizeWiseColorPriceArray.find((item) => item._id === selectedSize);
+      if (sizeData) {
+        const colorData = sizeData.colorAndSizeArray.find((item) => item.colorId === selectedColor);
+        if (colorData) {
+          setPrice(colorData.price);
+          setProductEntryId(colorData.productEntryId);
+        }
+      }
+    }
+  }, [data, selectedSize, selectedColor]);
+
+  const sizeItems = data?.productSize.map((size) => ({
+    key: size._id,
+    label: size.name,
+    children: null
+  }));
+
+  const handleApplyCoupon = () => {
+    if (!inputCode) {
+      message.error('Please enter coupon code');
+      return;
+    }
+    if (!userEmail) {
+      setVisible(true);
+      return;
+    }
+    const coupon = coupons?.find((c) => c.code === inputCode);
+    if (!coupon) {
+      message.error('Invalid coupon code!');
+      return;
+    }
+    const couponDetails: ICouponReq = {
+      productEntryId: productEntryId,
+      couponId: coupon._id,
+      email: userEmail
     };
+    couponAppliedMutate(couponDetails, {
+      onSuccess: (res) => {
+        setOrderDetails(res);
+        console.log('orderDetails: ', orderDetails);
+      },
+      onError: () => {
+        message.error('Failed to apply coupon');
+      }
+    });
+  };
 
-    return (
-        <div className="product-detail-page">
-            <Button className="back-btn" type="primary" onClick={() => navigate(ROUTES.productList)}>Back</Button>
-            <div className="product-detail-container">
-                <div className="product-detail-card">
-                    <div className="pro-img">
-                        <Image
-                            alt={data?.productName}
-                            src={IMAGE_BASE_URL + data?.productImage}
-                            width='100%'
-                            height={400}
-                            style={{ objectFit: 'cover' }}
-                        />
-                    </div>
-                    <div className="desc-card">
-                        <h2>{data?.productName}</h2>
-                        <div className="desc-item">
-                            <p>{data?.productDescription}</p>
-                            <div>
-                                <Rate disabled value={data?.productRate} />
-                            </div>
-                            <h2>₹{price}</h2>
-                        </div>
+  const handleConfirmOrder = () => {
+    if (!userEmail) {
+      setVisible(true);
+      return;
+    }
+    const orderData: IOrderReq = {
+      productEntryId: productEntryId,
+      couponId: selectedCoupon?._id ?? '',
+      email: userEmail,
+      orderValue: orderDetails?.amount_payable ?? price
+    };
+    orderConfirmedMutate(orderData, {
+      onSuccess: (res) => {
+        navigate(`/order/${res._id}`);
+      },
+      onError: () => {}
+    });
+  };
 
-                        <Descriptions.Item className="desc-item">
-                            <Tabs
-                                size="small"
-                                defaultActiveKey={selectedSize}
-                                onChange={(key) => setSelectedSize(key)}
-                                items={sizeItems}
-                            />
-                        </Descriptions.Item>
-                        <Descriptions.Item className="desc-item" label="Available Colors">
-                            {availableColors.length > 0 ? (
-                                <Space size="small">
-                                    {availableColors.map((color) => (
-                                        <Tag
-                                            key={color.colorId}
-                                            color={color.colorId === selectedColor ? 'blue' : 'default'}
-                                            onClick={() => setSelectedColor(color.colorId)}
-                                            style={{ width: 50, textAlign: 'center', cursor: 'pointer' }}
-                                        >
-                                            {color.color}
-                                        </Tag>
-                                    ))}
-                                </Space>
-                            ) : (
-                                'Select a size to see available colors'
-                            )}
-                        </Descriptions.Item>
-                        <div className="coupon-container">
-                            <p>Available Coupons</p>
-                            <Space size="middle" direction="horizontal">
-                                {coupons?.map(coupon => (
-                                    <Tag
-                                        style={{ width: 132, textAlign: 'center', cursor: 'pointer' }}
-                                        key={coupon._id}
-                                        color={coupon.code === (selectedCoupon && selectedCoupon?.code) ? 'green' : 'default'}
-                                        onClick={() => setSelectedCoupon(coupon)}
-                                    >
-                                        {coupon.code} - {coupon.discountPercentage}% off
-                                    </Tag>
-                                ))}
-                            </Space>
-                            {selectedCoupon && (
-                                <p className="coupon-desc">{selectedCoupon.description}</p>
-                            )}
-                            <div className="coupon-input">
-                                <Input
-                                    placeholder="Enter coupon code"
-                                    value={inputCode}
-                                    onChange={(e) => setInputCode(e.target.value)}
-                                    style={{ width: 200 }}
-                                    onInput={toInputUppercase}
-                                />
-                                <Button type="primary" onClick={handleApplyCoupon}>Apply</Button>
-                                { orderDetails?.isCoupon_applied && <CheckCircleOutlined style={{ color: 'green', marginLeft: 5 }} />}
-                            </div>
-                            <p className="coupon-desc" style={{ color: orderDetails?.isCoupon_applied ? 'green' : 'red' }}>{orderDetails ? orderDetails.message : ''}</p>
-                        </div>
-                        <div className="order-container">
-                                <h4>Order Details</h4>
-                                <div className="order-item">
-                                    <span>Total:</span>
-                                    <span>₹{price}</span>
-                                </div>
-                                {orderDetails?.isCoupon_applied && <div className="order-item discount">
-                                    <span>Discount Price:</span>
-                                    <span>-₹{orderDetails.discountedPrice}</span>
-                                </div>}
-                                <div className="order-item amount-payable">
-                                    <span>Amount Payable:</span>
-                                    <span>₹{orderDetails?.amount_payable ?? price}</span>
-                                </div>
-                                <Button className="buy-now" type="primary" onClick={handleConfirmOrder}>Confirm Order</Button>
-                            </div>
-                    </div>
-                </div>
+  const handleCancel = () => {
+    setVisible(false);
+  };
+
+  const onFinish = (values: IUser) => {
+    setVisible(false);
+    setUserEmail(values.email);
+  };
+
+  const setCoupleValue = (coupon: ICoupon) => {
+    setSelectedCoupon(coupon);
+    setInputCode(coupon.code);
+  };
+
+  return (
+    <div className="product-detail-page">
+      <Button className="back-btn" type="primary" onClick={() => navigate(ROUTES.productList)}>
+        Back
+      </Button>
+      <div className="product-detail-container">
+        <div className="product-detail-card">
+          <div className="pro-img">
+            <Image
+              alt={data?.productName}
+              src={IMAGE_BASE_URL + data?.productImage}
+              width="100%"
+              height={400}
+              style={{ objectFit: 'cover' }}
+            />
+          </div>
+          <div className="desc-card">
+            <h2>{data?.productName}</h2>
+            <div className="desc-item">
+              <p>{data?.productDescription}</p>
+              <div>
+                <Rate disabled value={data?.productRate} />
+              </div>
+              <h2>₹{price}</h2>
             </div>
-            {/* User email modal */}
-            <Modal
-                open={visible}
-                title=""
-                onCancel={handleCancel}
-                footer={[]}
-            >
-                <div className='container-add'>
-                    <Form
-                        layout='vertical'
-                        name="add-user"
-                        style={{
-                            maxWidth: 500,
-                            width: 400
-                        }}
-                        initialValues={{
-                            remember: true,
-                        }}
-                        onFinish={onFinish}
-                        autoComplete="off"
+
+            <Descriptions.Item className="desc-item">
+              <Tabs
+                size="small"
+                defaultActiveKey={selectedSize}
+                onChange={(key) => setSelectedSize(key)}
+                items={sizeItems}
+              />
+            </Descriptions.Item>
+            <Descriptions.Item className="desc-item" label="Available Colors">
+              {availableColors.length > 0 ? (
+                <Space size="small">
+                  {availableColors.map((color) => (
+                    <Tag
+                      key={color.colorId}
+                      color={color.colorId === selectedColor ? 'blue' : 'default'}
+                      onClick={() => setSelectedColor(color.colorId)}
+                      style={{ width: 50, textAlign: 'center', cursor: 'pointer' }}
                     >
-                        <Form.Item
-                            wrapperCol={{ md: 24 }}
-                            label="User Email"
-                            name="email"
-                            rules={[
-                                {
-                                    required: true,
-                                    message: 'Please enter email',
-                                },
-                                {
-                                    type: 'email',
-                                    message: 'Please enter valid email',
-                                },
-                            ]}
-                        >
-                            <Input />
-                        </Form.Item>
-                        <Form.Item>
-                            <Button type="primary" htmlType="submit">
-                                Submit
-                            </Button>
-                        </Form.Item>
-                    </Form>
+                      {color.color}
+                    </Tag>
+                  ))}
+                </Space>
+              ) : (
+                'Select a size to see available colors'
+              )}
+            </Descriptions.Item>
+            <div className="coupon-container">
+              <p>Available Coupons</p>
+              <Space size="middle" direction="horizontal">
+                {coupons?.map((coupon) => (
+                  <Tag
+                    style={{ width: 132, textAlign: 'center', cursor: 'pointer' }}
+                    key={coupon._id}
+                    color={
+                      coupon.code === (selectedCoupon && selectedCoupon?.code) ? 'green' : 'default'
+                    }
+                    onClick={() => setCoupleValue(coupon)}
+                  >
+                    {coupon.code} - {coupon.discountPercentage}% off
+                  </Tag>
+                ))}
+              </Space>
+              {selectedCoupon && <p className="coupon-desc">{selectedCoupon.description}</p>}
+              <div className="coupon-input">
+                <Input placeholder="Enter coupon code" value={inputCode} style={{ width: 200 }} />
+                <Button type="primary" onClick={handleApplyCoupon}>
+                  Apply
+                </Button>
+                {orderDetails?.isCoupon_applied && (
+                  <CheckCircleOutlined style={{ color: 'green', marginLeft: 5 }} />
+                )}
+              </div>
+              <p
+                className="coupon-desc"
+                style={{ color: orderDetails?.isCoupon_applied ? 'green' : 'red' }}
+              >
+                {orderDetails ? orderDetails.message : ''}
+              </p>
+            </div>
+            <div className="order-container">
+              <h4>Order Details</h4>
+              <div className="order-item">
+                <span>Total:</span>
+                <span>₹{price}</span>
+              </div>
+              {orderDetails?.isCoupon_applied && (
+                <div className="order-item discount">
+                  <span>Discount Price:</span>
+                  <span>-₹{orderDetails.discountedPrice}</span>
                 </div>
-            </Modal>
+              )}
+              <div className="order-item amount-payable">
+                <span>Amount Payable:</span>
+                <span>₹{orderDetails?.amount_payable ?? price}</span>
+              </div>
+              <Button className="buy-now" type="primary" onClick={handleConfirmOrder}>
+                Confirm Order
+              </Button>
+            </div>
+          </div>
         </div>
-    )
-}
+      </div>
+      {/* User email modal */}
+      <Modal open={visible} title="" onCancel={handleCancel} footer={[]}>
+        <div className="container-add">
+          <Form
+            layout="vertical"
+            name="add-user"
+            style={{
+              maxWidth: 500,
+              width: 400
+            }}
+            initialValues={{
+              remember: true
+            }}
+            onFinish={onFinish}
+            autoComplete="off"
+          >
+            <Form.Item
+              wrapperCol={{ md: 24 }}
+              label="User Email"
+              name="email"
+              rules={[
+                {
+                  required: true,
+                  message: 'Please enter email'
+                },
+                {
+                  type: 'email',
+                  message: 'Please enter valid email'
+                }
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit">
+                Submit
+              </Button>
+            </Form.Item>
+          </Form>
+        </div>
+      </Modal>
+    </div>
+  );
+};
 
 export default ProductDetail;

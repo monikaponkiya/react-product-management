@@ -5,3 +5,4 @@ export const PRODUCT_DETAILS = `${BASE_URL}product-entries/product-detail/`;
 export const COUPON_LIST_API = `${BASE_URL}coupon/coupon-list`;
 export const CHECK_APPLIED_COUPON = `${BASE_URL}coupon/check-applied-coupon`;
 export const CREATE_ORDER = `${BASE_URL}order/create-order`;
+export const ORDER_DETAILS = `${BASE_URL}order/order-detail/`;

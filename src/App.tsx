@@ -1,11 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import './App.css';
-import ProductDetail from './pages/product/productDetail';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { ROUTES } from './utils/routes';
-import ProductList from './pages/product/productList';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+
+import './App.css';
 import Layout from './common/Layout';
+import OrderDetail from './pages/product/orderDetail';
+import ProductDetail from './pages/product/productDetail';
+import ProductList from './pages/product/productList';
+import { ROUTES } from './utils/routes';
 
 function App() {
   const queryClient = new QueryClient();
@@ -18,10 +20,11 @@ function App() {
               <Route path={ROUTES.default} element={<ProductList />} />
               <Route path={ROUTES.productList} element={<ProductList />} />
               <Route path={ROUTES.productDetail} element={<ProductDetail />} />
+              <Route path={ROUTES.orderDetail} element={<OrderDetail />} />
             </Route>
           </Routes>
         </BrowserRouter>
-        <ReactQueryDevtools initialIsOpen={false} position='bottom-left'/>
+        <ReactQueryDevtools initialIsOpen={false} position="bottom-left" />
       </QueryClientProvider>
     </>
   );
