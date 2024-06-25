@@ -91,7 +91,7 @@ const ProductDetail = () => {
 
   const handleApplyCoupon = () => {
     if (!inputCode) {
-      message.error('Please enter coupon code');
+      message.error('Please select coupon code');
       return;
     }
     if (!userEmail) {
@@ -111,10 +111,9 @@ const ProductDetail = () => {
     couponAppliedMutate(couponDetails, {
       onSuccess: (res) => {
         setOrderDetails(res);
-        console.log('orderDetails: ', orderDetails);
       },
-      onError: () => {
-        message.error('Failed to apply coupon');
+      onError: (error) => {
+        message.error(error.message ?? 'Failed to apply coupon');
       }
     });
   };
@@ -126,7 +125,7 @@ const ProductDetail = () => {
     }
     const orderData: IOrderReq = {
       productEntryId: productEntryId,
-      couponId: selectedCoupon?._id ?? '',
+      couponId: orderDetails && orderDetails.isCoupon_applied ? selectedCoupon?._id : null,
       email: userEmail,
       orderValue: orderDetails?.amount_payable ?? price
     };

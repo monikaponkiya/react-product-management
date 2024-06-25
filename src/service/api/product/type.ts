@@ -56,7 +56,6 @@ export interface ICouponApplied {
   isCoupon_applied: boolean;
   discountedPrice: number;
   amount_payable: number;
-  original_price: number;
 }
 
 export interface IUser {
@@ -65,7 +64,7 @@ export interface IUser {
 
 export interface IOrderReq {
   productEntryId: string;
-  couponId: string;
+  couponId: string | null | undefined;
   email: string;
   orderValue: number;
 }
